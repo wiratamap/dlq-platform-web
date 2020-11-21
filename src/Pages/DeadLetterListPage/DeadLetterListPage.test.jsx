@@ -1,14 +1,17 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { when } from 'jest-when';
 import axios from 'axios';
 import userEvent from '@testing-library/user-event';
 import { act } from 'react-dom/test-utils';
+import { message } from 'antd';
 import { API_RESOURCE } from '../../Configurations/url';
 import { DEAD_LETTERS } from '../../Fixtures/deadLetter';
 import DeadLetterListPage from './DeadLetterListPage';
 
-jest.mock('axios');
+jest
+  .mock('axios')
+  .mock('antd/lib/message');
 
 describe('DeadLetterListPage', () => {
   beforeEach(() => {
@@ -31,6 +34,10 @@ describe('DeadLetterListPage', () => {
       .mockReturnValue({ data: DEAD_LETTERS });
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should render table with proper data', async () => {
     render(<DeadLetterListPage />);
     const [firstDeadLetter] = DEAD_LETTERS;
@@ -49,6 +56,15 @@ describe('DeadLetterListPage', () => {
     expect(deleteButton).toBeInTheDocument();
   });
 
+  it('should show error message when something went wrong when try to fetch dead letters', async () => {
+    when(axios.get)
+      .calledWith(API_RESOURCE.DEAD_LETTERS)
+      .mockRejectedValue(new Error());
+    await waitFor(() => render(<DeadLetterListPage />));
+
+    expect(message.error).toHaveBeenCalledWith('Something went wrong when try to fetch dead letters');
+  });
+
   it('should call axios delete with DELETE deleteAction when delete button is clicked', async () => {
     render(<DeadLetterListPage />);
     const [firstDeadLetter] = DEAD_LETTERS;
@@ -62,6 +78,7 @@ describe('DeadLetterListPage', () => {
     await act(async () => userEvent.click(reOrchestrateButton));
 
     expect(axios.delete).toHaveBeenCalledWith(`${API_RESOURCE.DEAD_LETTERS}/${firstDeadLetter.id}`, expectedRequestBody);
+    expect(message.success).toHaveBeenCalledWith(`Success to delete message with id ${firstDeadLetter.id}`);
   });
 
   it('should call axios delete with SEND_TO_ORIGIN_TOPIC deleteAction when re orhcestrate button is clicked', async () => {
@@ -77,5 +94,23 @@ describe('DeadLetterListPage', () => {
     await act(async () => userEvent.click(reOrchestrateButton));
 
     expect(axios.delete).toHaveBeenCalledWith(`${API_RESOURCE.DEAD_LETTERS}/${firstDeadLetter.id}`, expectedRequestBody);
+    expect(message.success).toHaveBeenCalledWith(`Success to re-orchestrate message with id ${firstDeadLetter.id}`);
+  });
+
+  it('should show error message when try to take an action to specific dead letter message', async () => {
+    axios.delete.mockRejectedValue(new Error());
+    render(<DeadLetterListPage />);
+    const [firstDeadLetter] = DEAD_LETTERS;
+    const reOrchestrateButton = await screen.findByTestId(`re-orchestrate-button-${firstDeadLetter.id}`);
+    const expectedRequestBody = {
+      data: {
+        deleteAction: 'SEND_TO_ORIGIN_TOPIC'
+      }
+    };
+
+    await act(async () => userEvent.click(reOrchestrateButton));
+
+    expect(axios.delete).toHaveBeenCalledWith(`${API_RESOURCE.DEAD_LETTERS}/${firstDeadLetter.id}`, expectedRequestBody);
+    expect(message.error).toHaveBeenCalledWith(`Failed to take an action on message ${firstDeadLetter.id}, please try again!`);
   });
 });
