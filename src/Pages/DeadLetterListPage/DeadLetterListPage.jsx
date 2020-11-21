@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
-  List, message, Spin, Table
+  Card,
+  Col,
+  List, message, Row, Spin, Table
 } from 'antd';
 import ReactJson from 'react-json-view';
 import axios from 'axios';
@@ -111,11 +113,19 @@ const DeadLetterListPage = () => {
   ];
 
   return (
-    <div data-testid="dead-letter-list-page">
-      <Spin spinning={isLoading}>
-        <Table rowKey="id" columns={columns} dataSource={deadLetters} />
-      </Spin>
-    </div>
+    <Row
+      data-testid="dead-letter-list-page"
+      justify="center"
+      style={{ paddingTop: 20, backgroundColor: '#e8e8e8' }}
+    >
+      <Col span={22}>
+        <Card title="Dead Letters">
+          <Spin spinning={isLoading}>
+            <Table rowKey="id" columns={columns} dataSource={deadLetters} />
+          </Spin>
+        </Card>
+      </Col>
+    </Row>
   );
 };
 
