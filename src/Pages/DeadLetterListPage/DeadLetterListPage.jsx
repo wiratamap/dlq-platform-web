@@ -4,6 +4,7 @@ import ReactJson from 'react-json-view';
 import axios from 'axios';
 import moment from 'moment';
 import { API_RESOURCE } from '../../Configurations/url';
+import ButtonActionGroup from './ButtonActionGroup';
 
 const DeadLetterListPage = () => {
   const [deadLetters, setDeadLetters] = useState([]);
@@ -13,9 +14,18 @@ const DeadLetterListPage = () => {
     setDeadLetters(data);
   };
 
+  const onHandleMessageAction = async (deadLetterId, deleteAction) => {
+    const requestBody = {
+      deleteAction
+    };
+    await axios.delete(`${API_RESOURCE.DEAD_LETTERS}/${deadLetterId}`, {
+      data: requestBody
+    });
+  };
+
   useEffect(() => {
     fetchDeadLetters();
-  }, []);
+  }, [onHandleMessageAction]);
 
   const columns = [
     {
@@ -41,7 +51,10 @@ const DeadLetterListPage = () => {
         const { eventId } = JSON.parse(originalMessage);
         return (
           <div data-testid={`original-message-${eventId}`}>
-            <ReactJson name="originalMessage" src={JSON.parse(originalMessage)} />
+            <ReactJson
+              name="originalMessage"
+              src={JSON.parse(originalMessage)}
+            />
           </div>
         );
       }
@@ -58,6 +71,17 @@ const DeadLetterListPage = () => {
       render: (createdDate) => moment(createdDate).format('MMMM Do YYYY, h:mm:ss a'),
       defaultSortOrder: 'descend',
       sorter: (a, b) => moment(a.createdDate).unix() - moment(b.createdDate).unix()
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      dataIndex: 'id',
+      render: (deadLetterId) => (
+        <ButtonActionGroup
+          deadLetterId={deadLetterId}
+          onHandleMessageAction={onHandleMessageAction}
+        />
+      )
     }
   ];
 
