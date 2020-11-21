@@ -1,0 +1,29 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true,
+        "jest/globals": true
+    },
+    "extends": [
+        "plugin:react/recommended",
+        "airbnb"
+    ],
+    "parserOptions": {
+        "ecmaFeatures": {
+            "jsx": true
+        },
+        "ecmaVersion": 12,
+        "sourceType": "module"
+    },
+    "plugins": [
+        "react",
+        "jest",
+        "testing-library"
+    ],
+    "rules": {
+        "comma-dangle": ["error", "never"],
+        "no-underscore-dangle": "off",
+        "class-methods-use-this": "off"
+    },
+    "parser": "babel-eslint"
+}
