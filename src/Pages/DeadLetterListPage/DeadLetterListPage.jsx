@@ -1,0 +1,71 @@
+import React, { useEffect, useState } from 'react';
+import { List, Table } from 'antd';
+import ReactJson from 'react-json-view';
+import axios from 'axios';
+import moment from 'moment';
+import { API_RESOURCE } from '../../Configurations/url';
+
+const DeadLetterListPage = () => {
+  const [deadLetters, setDeadLetters] = useState([]);
+
+  const fetchDeadLetters = async () => {
+    const { data } = await axios.get(API_RESOURCE.DEAD_LETTERS);
+    setDeadLetters(data);
+  };
+
+  useEffect(() => {
+    fetchDeadLetters();
+  }, []);
+
+  const columns = [
+    {
+      title: 'Origin Topics',
+      dataIndex: 'originTopics',
+      key: 'originTopics',
+      render: (originTopics) => (
+        <List
+          size="large"
+          bordered
+          dataSource={originTopics}
+          renderItem={(originTopic) => (
+            <List.Item key={originTopic.name}>{originTopic.name}</List.Item>
+          )}
+        />
+      )
+    },
+    {
+      title: 'Message',
+      dataIndex: 'originalMessage',
+      key: 'originalMessage',
+      render: (originalMessage) => {
+        const { eventId } = JSON.parse(originalMessage);
+        return (
+          <div data-testid={`original-message-${eventId}`}>
+            <ReactJson name="originalMessage" src={JSON.parse(originalMessage)} />
+          </div>
+        );
+      }
+    },
+    {
+      title: 'Reason',
+      dataIndex: 'reason',
+      key: 'reason'
+    },
+    {
+      title: 'Thrown At',
+      dataIndex: 'createdDate',
+      key: 'thrownAt',
+      render: (createdDate) => moment(createdDate).format('MMMM Do YYYY, h:mm:ss a'),
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => moment(a.createdDate).unix() - moment(b.createdDate).unix()
+    }
+  ];
+
+  return (
+    <div data-testid="dead-letter-list-page">
+      <Table rowKey="id" columns={columns} dataSource={deadLetters} />
+    </div>
+  );
+};
+
+export default DeadLetterListPage;
