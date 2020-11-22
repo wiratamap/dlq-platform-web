@@ -113,4 +113,22 @@ describe('DeadLetterListPage', () => {
     expect(axios.delete).toHaveBeenCalledWith(`${API_RESOURCE.DEAD_LETTERS}/${firstDeadLetter.id}`, expectedRequestBody);
     expect(message.error).toHaveBeenCalledWith(`Failed to take an action on message ${firstDeadLetter.id}, please try again!`);
   });
+
+  it('should render dead letters with searched event id when user search with event id filter criteria', async () => {
+    const [firstDeadLetter] = DEAD_LETTERS;
+    const { eventId: firstEventId } = JSON.parse(firstDeadLetter.originalMessage);
+    when(axios.get)
+      .calledWith(`${API_RESOURCE.DEAD_LETTERS}?eventId=${firstEventId}`)
+      .mockReturnValue({ data: [firstDeadLetter] });
+    render(<DeadLetterListPage />);
+    const searchInput = await screen.findByPlaceholderText(/search by event id/i);
+
+    userEvent.type(searchInput, firstEventId);
+    userEvent.type(searchInput, '{enter}');
+
+    const reason = await screen.findByText(/Source account with CIF acc44 not found/);
+    const originTopic = screen.getByText(/EVENT_TOP_UP_REQUEST/);
+    expect(reason).toBeInTheDocument();
+    expect(originTopic).toBeInTheDocument();
+  });
 });

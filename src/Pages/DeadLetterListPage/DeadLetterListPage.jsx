@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import {
   Card,
   Col,
+  Divider,
+  Input,
   List, message, Row, Spin, Table
 } from 'antd';
 import ReactJson from 'react-json-view';
@@ -14,10 +16,10 @@ const DeadLetterListPage = () => {
   const [deadLetters, setDeadLetters] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchDeadLetters = async () => {
+  const fetchDeadLetters = async (queryParameter) => {
     try {
       setIsLoading(true);
-      const { data } = await axios.get(API_RESOURCE.DEAD_LETTERS);
+      const { data } = await axios.get(`${API_RESOURCE.DEAD_LETTERS}${queryParameter}`);
       setDeadLetters(data);
     } catch (error) {
       message.error('Something went wrong when try to fetch dead letters');
@@ -50,8 +52,13 @@ const DeadLetterListPage = () => {
     }
   };
 
+  const onSearch = async (value) => {
+    const queryParameter = `?eventId=${value}`;
+    fetchDeadLetters(queryParameter);
+  };
+
   useEffect(() => {
-    fetchDeadLetters();
+    fetchDeadLetters('');
   }, []);
 
   const columns = [
@@ -116,10 +123,18 @@ const DeadLetterListPage = () => {
     <Row
       data-testid="dead-letter-list-page"
       justify="center"
-      style={{ paddingTop: 20, backgroundColor: '#e8e8e8' }}
+      style={{ paddingTop: 20, backgroundColor: '#e8e8e8', minHeight: '900px' }}
     >
       <Col span={22}>
         <Card title="Dead Letters">
+          <Input.Search
+            placeholder="Search by event id"
+            onSearch={onSearch}
+            enterButton
+            style={{ width: '500px' }}
+            size="large"
+          />
+          <Divider />
           <Spin spinning={isLoading}>
             <Table rowKey="id" columns={columns} dataSource={deadLetters} />
           </Spin>
