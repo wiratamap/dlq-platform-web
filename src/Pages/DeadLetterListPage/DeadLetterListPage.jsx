@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from 'react';
 import {
   Card,
   Col,
   Divider,
   Input,
-  List, message, Row, Spin, Table
+  List,
+  message,
+  Row,
+  Spin,
+  Table
 } from 'antd';
-import ReactJson from 'react-json-view';
 import axios from 'axios';
 import moment from 'moment';
+import React, { useEffect, useState } from 'react';
+import ReactJson from 'react-json-view';
 import { API_RESOURCE } from '../../Configurations/url';
 import ButtonActionGroup from './ButtonActionGroup';
 
@@ -19,7 +23,9 @@ const DeadLetterListPage = () => {
   const fetchDeadLetters = async (queryParameter) => {
     try {
       setIsLoading(true);
-      const { data } = await axios.get(`${API_RESOURCE.DEAD_LETTERS}${queryParameter}`);
+      const { data } = await axios.get(
+        `${API_RESOURCE.DEAD_LETTERS}${queryParameter}`
+      );
       setDeadLetters(data);
     } catch (error) {
       message.error('Something went wrong when try to fetch dead letters');
@@ -42,11 +48,17 @@ const DeadLetterListPage = () => {
       await axios.delete(`${API_RESOURCE.DEAD_LETTERS}/${deadLetterId}`, {
         data: requestBody
       });
-      const newDeadLetters = deadLetters.filter((deadLetter) => deadLetter.id !== deadLetterId);
+      const newDeadLetters = deadLetters.filter(
+        (deadLetter) => deadLetter.id !== deadLetterId
+      );
       setDeadLetters(newDeadLetters);
-      message.success(`Success to ${messageAction[deleteAction]} message with id ${deadLetterId}`);
+      message.success(
+        `Success to ${messageAction[deleteAction]} message with id ${deadLetterId}`
+      );
     } catch (error) {
-      message.error(`Failed to take an action on message ${deadLetterId}, please try again!`);
+      message.error(
+        `Failed to take an action on message ${deadLetterId}, please try again!`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +116,8 @@ const DeadLetterListPage = () => {
       key: 'thrownAt',
       render: (createdDate) => moment(createdDate).format('MMM Do YYYY, H:mm:ss'),
       defaultSortOrder: 'descend',
-      sorter: (a, b) => moment(a.createdDate).unix() - moment(b.createdDate).unix()
+      sorter: (deadLetter, anotherDeadLetter) => moment(deadLetter.createdDate).unix()
+        - moment(anotherDeadLetter.createdDate).unix()
     },
     {
       title: 'Action',
